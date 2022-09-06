@@ -1,5 +1,7 @@
 #!/bin/bash
 
+source ./config.sh
+
 ENABLE_DOWNLOAD=${ENABLE_DOWNLOAD:-false}
 
 if [ ! -e files ]; then
@@ -20,31 +22,40 @@ download() {
     fi
 }
 
-if $ENABLE_DOWNLOAD; then
-    RUNC_VERSION=1.0.3
-    CONTAINERD_VERSION=1.5.8
-    NERDCTL_VERSION=0.15.0
-    CNI_VERSION=1.0.1
+NERDCTL_TARBALL=nerdctl-${NERDCTL_VERSION}-linux-amd64.tar.gz
+CONTAINERD_TARBALL=containerd-${CONTAINERD_VERSION}-linux-amd64.tar.gz
+CNI_TARBALL=cni-plugins-linux-amd64-v${CNI_VERSION}.tgz
 
-    download https://github.com/opencontainers/runc/releases/download/v${RUNC_VERSION}/runc.amd64
-    download https://github.com/containerd/containerd/releases/download/v${CONTAINERD_VERSION}/containerd-${CONTAINERD_VERSION}-linux-amd64.tar.gz
-    download https://github.com/containerd/nerdctl/releases/download/v${NERDCTL_VERSION}/nerdctl-${NERDCTL_VERSION}-linux-amd64.tar.gz
-    download https://github.com/containernetworking/plugins/releases/download/v${CNI_VERSION}/cni-plugins-linux-amd64-v${CNI_VERSION}.tgz kubernetes/cni
+if $ENABLE_DOWNLOAD; then
+    download https://github.com/opencontainers/runc/releases/download/v${RUNC_VERSION}/runc.amd64 runc/v${RUNC_VERSION}
+    download https://github.com/containerd/containerd/releases/download/v${CONTAINERD_VERSION}/${CONTAINERD_TARBALL}
+    download https://github.com/containerd/nerdctl/releases/download/v${NERDCTL_VERSION}/${NERDCTL_TARBALL}
+    download https://github.com/containernetworking/plugins/releases/download/v${CNI_VERSION}/${CNI_TARBALL} kubernetes/cni
 fi
+
+#select_latest() {
+#    local latest=$(ls $* | tail -1)
+#    if [ -z "$latest" ]; then
+#        echo "No such file: $*"
+#        exit 1
+#    fi
+#    echo $latest
+#}
 
 # Install runc
 echo "==> Install runc"
-sudo cp ./files/runc.amd64 /usr/local/bin/runc
+sudo cp ./files/runc/v${RUNC_VERSION}/runc.amd64 /usr/local/bin/runc
 sudo chmod 755 /usr/local/bin/runc
 
 # Install nerdctl
 echo "==> Install nerdctl"
-tar xvf ./files/nerdctl-*.tar.gz -C /tmp
+#tar xvf $(select_latest "./files/nerdctl-*.tar.gz") -C /tmp
+tar xvf ./files/${NERDCTL_TARBALL} -C /tmp
 sudo cp /tmp/nerdctl /usr/local/bin
 
 # Install containerd
 echo "==> Install containerd"
-sudo tar xvf ./files/containerd-*.tar.gz --strip-components=1 -C /usr/local/bin
+sudo tar xvf ./files/${CONTAINERD_TARBALL} --strip-components=1 -C /usr/local/bin
 sudo cp ./containerd.service /etc/systemd/system/
 
 sudo mkdir -p \
@@ -62,4 +73,4 @@ sudo systemctl enable --now containerd
 # Install cni plugins
 echo "==> Install CNI plugins"
 sudo mkdir -p /opt/cni/bin
-sudo tar xvzf ./files/kubernetes/cni/cni-plugins-*.tgz -C /opt/cni/bin
+sudo tar xvzf ./files/kubernetes/cni/${CNI_TARBALL} -C /opt/cni/bin
