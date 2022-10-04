@@ -20,7 +20,7 @@ This supports:
 
 - RHEL 7 / CentOS 7
 - RHEL 8 / AlmaLinux 8
-- Ubuntu 20.04
+- Ubuntu 20.04 / 22.04
 
 ## Download offline files
 
@@ -59,8 +59,6 @@ This script calls all of following scripts.
     - You can add any container image repoTag to imagelists/*.txt.
 * create-repo.sh
     - Download RPM or DEB repositories.
-* mirror-docker-ce.sh
-    - Get mirror of docker-ce repository.
 * copy-target-scripts.sh
     - Copy scripts for target node.
 
@@ -108,6 +106,10 @@ Extract kubespray and apply patches:
 
     $ ./extract-kubespray.sh
     $ cd kubespray-{version}
+
+For Ubuntu 22.04, you need to install build tools to build some python packages.
+
+    $ sudo apt install gcc python3-dev libffi-dev libssl-dev
 
 Install ansible:
 

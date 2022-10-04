@@ -13,7 +13,7 @@ fi
 load_images() {
     for image in $BASEDIR/images/*.tar.gz; do
         echo "===> Loading $image"
-        gunzip -c $image | sudo $NERDCTL load
+        sudo $NERDCTL load -i $image
     done
 }
 
@@ -23,7 +23,7 @@ push_images() {
 
         # Removes specific repo parts from each image for kubespray
         newImage=$image
-        for repo in k8s.gcr.io gcr.io docker.io quay.io; do
+        for repo in registry.k8s.io k8s.gcr.io gcr.io docker.io quay.io; do
             newImage=$(echo ${newImage} | sed s@^${repo}/@@)
         done
 
